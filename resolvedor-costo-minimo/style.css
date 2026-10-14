@@ -215,7 +215,12 @@ input:focus {
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
 }
-@media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+@media (max-width: 700px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .card { padding: 1.25rem; }
+  .z-box { flex-direction: column; gap: 0.5rem; text-align: center; padding: 1.5rem; }
+  .asig-item { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+}
 
 .nodes-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; }
 .nodes-table th {

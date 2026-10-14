@@ -144,6 +144,7 @@ function ejecutarProceso() {
 
   const mensajeAviso = document.getElementById('warnCalc');
   const diferencia = Math.abs(totalOferta - totalDemanda);
+  // Tolerancia flotante para evitar nodos ficticios por redondeo decimal
   if (diferencia > 0.0001) {
     mensajeAviso.textContent = `Problema desbalanceado. Se agrega nodo ficticio (diferencia: ${formatearNumero(diferencia)}).`;
     mensajeAviso.classList.add('visible');
@@ -151,6 +152,7 @@ function ejecutarProceso() {
     mensajeAviso.classList.remove('visible');
   }
 
+  // Costo 0 en el nodo ficticio para absorber el excedente sin alterar Z
   if (totalOferta > totalDemanda + 0.0001) {
     destinos.push({ nombre: 'Ficticio', demanda: totalOferta - totalDemanda });
     costos.forEach(fila => fila.push(0));
@@ -162,6 +164,7 @@ function ejecutarProceso() {
   const ofertaRestante = origenes.map(origen => origen.oferta);
   const demandaRestante = destinos.map(destino => destino.demanda);
   const asignaciones = [];
+  const matrizAsignada = Array.from({ length: origenes.length }, () => Array(destinos.length).fill(0));
   const filaEliminada = new Array(origenes.length).fill(false);
   const colEliminada = new Array(destinos.length).fill(false);
 
@@ -185,18 +188,13 @@ function ejecutarProceso() {
 
     const cantidad = Math.min(ofertaRestante[minFila], demandaRestante[minCol]);
     asignaciones.push({ fila: minFila, col: minCol, cantidad, costo: costos[minFila][minCol] });
+    matrizAsignada[minFila][minCol] = cantidad;
 
     ofertaRestante[minFila] -= cantidad;
     demandaRestante[minCol] -= cantidad;
 
-    if (ofertaRestante[minFila] <= 0.0001 && demandaRestante[minCol] <= 0.0001) {
-      filaEliminada[minFila] = true;
-      colEliminada[minCol] = true;
-    } else if (ofertaRestante[minFila] <= 0.0001) {
-      filaEliminada[minFila] = true;
-    } else {
-      colEliminada[minCol] = true;
-    }
+    if (ofertaRestante[minFila] <= 0.0001) filaEliminada[minFila] = true;
+    if (demandaRestante[minCol] <= 0.0001) colEliminada[minCol] = true;
   }
 
   let costoTotal = 0;
@@ -214,16 +212,17 @@ function ejecutarProceso() {
     htmlResultado += `<tr><td class="row-head">${escapeHTML(origenes[fila].nombre)}</td>`;
 
     for (let col = 0; col < destinos.length; col++) {
-      const asignacion = asignaciones.find(a => a.fila === fila && a.col === col);
-      if (asignacion && asignacion.cantidad > 0) {
-        costoTotal += asignacion.cantidad * asignacion.costo;
+      const cantidad = matrizAsignada[fila][col];
+      const costo = costos[fila][col];
+      if (cantidad > 0) {
+        costoTotal += cantidad * costo;
         htmlResultado += `
           <td class="assigned">
-            <span class="cell-cost">${formatearCosto(asignacion.costo)}</span>
-            <span class="cell-qty">${formatearNumero(asignacion.cantidad)}</span>
+            <span class="cell-cost">${formatearCosto(costo)}</span>
+            <span class="cell-qty">${formatearNumero(cantidad)}</span>
           </td>`;
       } else {
-        htmlResultado += `<td><span class="cell-empty">${formatearCosto(costos[fila][col])}</span></td>`;
+        htmlResultado += `<td><span class="cell-empty">${formatearCosto(costo)}</span></td>`;
       }
     }
 
@@ -241,7 +240,7 @@ function ejecutarProceso() {
   document.getElementById('tablaResultado').innerHTML = htmlResultado;
   document.getElementById('zValue').textContent = formatearCosto(costoTotal);
 
-  ultimoResultado = { origenes, destinos, costos, asignaciones, costoTotal, totalOferta, totalDemanda };
+  ultimoResultado = { origenes, destinos, costos, matrizAsignada, totalOferta, totalDemanda };
 
   document.getElementById('listaAsig').innerHTML = asignaciones
     .filter(asignacion => asignacion.cantidad > 0)
@@ -274,6 +273,7 @@ function filasATextoCSV(filas) {
 }
 
 function descargarCSV(contenido, nombreArchivo) {
+  // Prefijo BOM UTF-8 para que Excel reconozca tildes y símbolos correctamente
   const blob = new Blob(['\uFEFF' + contenido], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const enlace = document.createElement('a');
@@ -288,16 +288,14 @@ function descargarCSV(contenido, nombreArchivo) {
 function exportarCSV() {
   if (!ultimoResultado) return;
 
-  const { origenes, destinos, costos, asignaciones, totalOferta, totalDemanda } = ultimoResultado;
+  const { origenes, destinos, costos, matrizAsignada, totalOferta, totalDemanda } = ultimoResultado;
   const filas = [];
 
   filas.push(['Origen \\ Destino', ...destinos.map(destino => destino.nombre), 'Oferta']);
   origenes.forEach((origen, i) => {
     const fila = [origen.nombre];
-    destinos.forEach((destino, j) => {
-      const asignacion = asignaciones.find(a => a.fila === i && a.col === j);
-      const cantidad = asignacion ? asignacion.cantidad : 0;
-      fila.push(`${formatearNumero(cantidad)} | ${formatearCosto(costos[i][j])}`);
+    destinos.forEach((_, j) => {
+      fila.push(`${formatearNumero(matrizAsignada[i][j])} | ${formatearCosto(costos[i][j])}`);
     });
     fila.push(formatearNumero(origen.oferta));
     filas.push(fila);

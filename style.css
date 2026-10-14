@@ -53,20 +53,6 @@ header {
   margin-bottom: 3rem;
 }
 
-.badge {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: var(--cyan-bright);
-  background: var(--cyan-dim);
-  border: 1px solid rgba(0, 229, 255, 0.3);
-  padding: 5px 14px;
-  margin-bottom: 1.2rem;
-}
-
 header h1 {
   font-family: var(--font-mono);
   font-size: 2rem;
@@ -205,14 +191,4 @@ header p {
 
 .portal-card:hover .card-action .material-symbols-outlined {
   transform: translateX(4px);
-}
-
-footer {
-  margin-top: 3rem;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
