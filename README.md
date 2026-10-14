@@ -12,6 +12,8 @@ Aplicación web para calcular la solución inicial de problemas de transporte me
 
 Permite definir orígenes, destinos, ofertas, demandas y costos unitarios, balancea automáticamente problemas desbalanceados con un nodo ficticio y exporta la matriz resultante a CSV.
 
+Disponible en: bautiavila.com
+
 ## Acerca del proyecto
 
 Realizado como trabajo grupal para la materia "Modelos y Sistemas" del séptimo año de la tecnicatura secundaria en informática.
